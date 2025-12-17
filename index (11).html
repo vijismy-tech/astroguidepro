@@ -1,0 +1,127 @@
+
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AstroGuide - முழு ஜாதகம்</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #fdf2f2; padding-bottom: 80px; }
+        header { background: #b71c1c; color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1000; }
+        .container { padding: 15px; max-width: 600px; margin: auto; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        
+        /* Form */
+        input, button { width: 100%; padding: 12px; margin: 8px 0; border: 1.5px solid #ddd; border-radius: 10px; }
+        button { background: #b71c1c; color: white; border: none; font-weight: bold; cursor: pointer; }
+
+        /* ஜாதகக் கட்டம் */
+        .chart-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; background: #b71c1c; border: 2px solid #b71c1c; margin-top: 10px; }
+        .chart-grid div { background: #fffdf2; height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; text-align: center; }
+        .center-box { grid-column: span 2; grid-row: span 2; background: #fdf2f2 !important; color: #b71c1c !important; font-size: 14px !important; }
+
+        /* தசா புக்தி அட்டவணை */
+        .dasa-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        .dasa-table th, .dasa-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        .dasa-table th { background: #b71c1c; color: white; }
+        .dasa-table tr:nth-child(even) { background: #f9f9f9; }
+
+        h3 { color: #b71c1c; margin: 15px 0 10px 0; border-left: 4px solid #b71c1c; padding-left: 10px; }
+        .result-page { display: none; }
+    </style>
+</head>
+<body>
+
+    <header><h2>✨ AstroGuide Pro</h2></header>
+
+    <div class="container">
+        <div id="input-section" class="card">
+            <h3>பிறந்த விபரங்கள்</h3>
+            <input type="text" id="name" placeholder="பெயர்">
+            <input type="date" id="dob">
+            <input type="time" id="tob">
+            <input type="text" id="pob" placeholder="பிறந்த இடம்">
+            <button onclick="generateJadhagam()">ஜாதகம் கணி</button>
+        </div>
+
+        <div id="result-section" class="result-page">
+            <div class="card">
+                <h2 id="res-name" style="text-align:center; color:#b71c1c;"></h2>
+                <p id="res-details" style="text-align:center; font-size:12px;"></p>
+            </div>
+
+            <div class="card">
+                <h3>ராசி கட்டம் (D1 - பாகைகளுடன்)</h3>
+                <div class="chart-grid" id="rasi-chart"></div>
+            </div>
+
+            <div class="card">
+                <h3>நவாம்ச கட்டம் (D9)</h3>
+                <div class="chart-grid" id="navamsa-chart"></div>
+            </div>
+
+            <div class="card">
+                <h3>தசா புக்தி விபரங்கள்</h3>
+                <p style="background:#fff9c4; padding:8px; border-radius:5px; margin-bottom:10px;"><b>தசையிருப்பு:</b> <span id="dasa-balance">சுக்கிர தசை - 4 வருடம் 2 மாதம்</span></p>
+                <table class="dasa-table">
+                    <thead><tr><th>தசை</th><th>புக்தி</th><th>அந்தரம்</th><th>முடிவுத் தேதி</th></tr></thead>
+                    <tbody id="dasa-body"></tbody>
+                </table>
+            </div>
+            
+            <button onclick="location.reload()" style="background:#555;">மீண்டும் கணிக்க</button>
+        </div>
+    </div>
+
+    <script>
+        function generateJadhagam() {
+            const name = document.getElementById('name').value;
+            if(!name) { alert("பெயரை உள்ளிடவும்"); return; }
+
+            document.getElementById('input-section').style.display = 'none';
+            document.getElementById('result-section').style.display = 'block';
+            document.getElementById('res-name').innerText = name + "-ன் ஜாதகம்";
+
+            // மாதிரி தரவுகள் (Backend-ல் இருந்து வருவது போல்)
+            const rasiData = {
+                11: "லக் 15.20°", 0: "சூ 2.10°", 1: "பு 12.4°", 2: "செ 25.0°",
+                10: "ரா 18.5°", 3: "சந் 22.3°", 9: "", 4: "கே 18.5°",
+                8: "வி 10.1°", 7: "", 6: "ச 5.15°", 5: "வெ 14.8°"
+            };
+
+            const dasaData = [
+                {d: "சுக்கிரன்", p: "குரு", a: "சனி", date: "20-12-2025"},
+                {d: "சுக்கிரன்", p: "குரு", a: "புதன்", date: "15-05-2026"},
+                {d: "சுக்கிரன்", p: "சனி", a: "சனி", date: "10-10-2026"}
+            ];
+
+            // கட்டம் வரைதல்
+            function drawChart(elementId, data, label) {
+                const grid = document.getElementById(elementId);
+                const order = [11, 0, 1, 2, 10, 'C', 3, 9, 4, 8, 7, 6, 5];
+                order.forEach(i => {
+                    let div = document.createElement('div');
+                    if(i === 'C') {
+                        div.className = 'center-box';
+                        div.innerHTML = label;
+                    } else {
+                        div.innerHTML = data[i] || "";
+                    }
+                    grid.appendChild(div);
+                });
+            }
+
+            drawChart('rasi-chart', rasiData, "ராசி");
+            drawChart('navamsa-chart', rasiData, "அம்சம்");
+
+            // தசை அட்டவணை
+            const tbody = document.getElementById('dasa-body');
+            dasaData.forEach(row => {
+                tbody.innerHTML += `<tr><td>${row.d}</td><td>${row.p}</td><td>${row.a}</td><td>${row.date}</td></tr>`;
+            });
+        }
+    </script>
+</body>
+</html>
